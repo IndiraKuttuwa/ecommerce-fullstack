@@ -148,7 +148,7 @@
                 </div>
                 <div class="input-space">
                     <label class="au-checkbox">
-                        <input type="checkbox" (change)="copyShippingAddressToBillingAddress($event)">
+                        <input type="checkbox" (change)="copyShippingAddressToBillingAddress($any($event).target.value)">
                         <span class="au-checkmark"></span>Billing Address same as Shipping Address
                     </label>
                 </div>

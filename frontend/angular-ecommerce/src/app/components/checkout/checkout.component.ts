@@ -1,9 +1,14 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
+import { Router } from '@angular/router';
 import { Country } from 'src/app/common/country';
+import { Order } from 'src/app/common/order';
+import { OrderItem } from 'src/app/common/order-item';
+import { Purchase } from 'src/app/common/purchase';
 
 import { State } from 'src/app/common/state';
 import { CartService } from 'src/app/services/cart.service';
+import { CheckoutService } from 'src/app/services/checkout.service';
 import { FormService } from 'src/app/services/form.service';
 import { Customvalidator } from 'src/app/validators/customvalidator';
 
@@ -26,7 +31,9 @@ export class CheckoutComponent implements OnInit {
   billingAddressStates: State[] = [];
   constructor(private formBuilder: FormBuilder,
               private formService: FormService,
-              private cartService: CartService) { }
+              private cartService: CartService,
+              private checkoutService: CheckoutService,
+              private router: Router) { }
 
   ngOnInit(): void {
 
@@ -111,18 +118,78 @@ export class CheckoutComponent implements OnInit {
     console.log(this.checkoutFormGroup.get('customer').value);
     if(this.checkoutFormGroup.invalid) {
       this.checkoutFormGroup.markAllAsTouched();
+      return;
     }
-     
+    //set up order
+
+    let order = new Order();
+    order.totalPrice = this.totalPrice;
+    order.totalQuantity = this.totalQuantity;
+
+
+    //gete cart items
+    const cartItems = this.cartService.cartItems;
+
+    //create OrderItems from cart items
+    let orderItems: OrderItem[] = cartItems.map(tempCartItem => new OrderItem(tempCartItem));
+
+    //set up purchase
+    let purchase = new Purchase();
+
+    //populate customer and address
+    purchase.customer = this.checkoutFormGroup.controls['customer'].value;
+    purchase.shippingAddress = this.checkoutFormGroup.controls['shippingAddress'].value;
+    const shippingState: State = JSON.parse(JSON.stringify(purchase.shippingAddress.state));
+    const shippingCountry: Country = JSON.parse(JSON.stringify(purchase.shippingAddress.country));
+    purchase.shippingAddress.state = shippingState.name;
+    purchase.shippingAddress.country = shippingCountry.name;
+
+    purchase.billingAddress = this.checkoutFormGroup.controls['billingAddress'].value;
+    const billingState: State = JSON.parse(JSON.stringify(purchase.billingAddress.state));
+    const billingCountry: Country = JSON.parse(JSON.stringify(purchase.billingAddress.country));
+    purchase.billingAddress.state = billingState.name;
+    purchase.billingAddress.country = billingCountry.name;
+
+    //populate purchhase
+    purchase.order = order;
+    purchase.orderItems = orderItems;
+
+    //call REST API via Checkout Service
+    this.checkoutService.placeOrder(purchase).subscribe(
+      {
+        next: response => {
+          alert(`Your Order has been received.\nOrder tracking number: ${response.orderTrackingNumber}`);
+          //reset cart
+          this.resetCart();
+        },
+        error: err => {
+          alert(`There was a error: ${err.message}`);
+        }
+      }
+    )
+
+  }
+  resetCart() {
+    this.cartService.cartItems = [];
+    this.cartService.totalPrice.next(0);
+    this.cartService.totalQuantity.next(0);
+    this.checkoutFormGroup.reset();
+    this.router.navigateByUrl("/products");
   }
 
-  copyShippingAddressToBillingAddress(event){
-    if(event.target.checked){
-      this.checkoutFormGroup.controls.billingAddress
-            .setValue(this.checkoutFormGroup.controls.shippingAddress.value);
+  copyShippingAddressToBillingAddress(checked: boolean){
+    if (checked) {
+      this.checkoutFormGroup.controls?.['billingAddress']
+            .setValue(this.checkoutFormGroup.controls?.['shippingAddress'].value);
+
+      // bug fix for states
       this.billingAddressStates = this.shippingAddressStates;
+
     }
-    else{
-      this.checkoutFormGroup.controls.billingAddress.reset();
+    else {
+      this.checkoutFormGroup.controls?.['billingAddress'].reset();
+
+      // bug fix for states
       this.billingAddressStates = [];
     }
   }
