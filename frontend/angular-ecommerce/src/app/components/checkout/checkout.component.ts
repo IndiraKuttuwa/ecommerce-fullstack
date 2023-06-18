@@ -177,8 +177,8 @@ export class CheckoutComponent implements OnInit {
     this.router.navigateByUrl("/products");
   }
 
-  copyShippingAddressToBillingAddress(checked: boolean){
-    if (checked) {
+  copyShippingAddressToBillingAddress(event){
+    if (event.target.checked) {
       this.checkoutFormGroup.controls?.['billingAddress']
             .setValue(this.checkoutFormGroup.controls?.['shippingAddress'].value);
 

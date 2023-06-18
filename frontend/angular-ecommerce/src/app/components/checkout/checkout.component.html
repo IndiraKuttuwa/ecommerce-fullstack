@@ -117,7 +117,7 @@
                         <div class="col-md-9">
                             <div class="input-space">
                                 <select formControlName="state">
-                                    <option *ngFor="let state of shippingAddressStates">
+                                    <option *ngFor="let state of shippingAddressStates" [ngValue]="state">
                                         {{ state.name }}
                                     </option>
                                 </select>
@@ -148,7 +148,7 @@
                 </div>
                 <div class="input-space">
                     <label class="au-checkbox">
-                        <input type="checkbox" (change)="copyShippingAddressToBillingAddress($any($event).target.value)">
+                        <input type="checkbox" (change)="copyShippingAddressToBillingAddress($event)">
                         <span class="au-checkmark"></span>Billing Address same as Shipping Address
                     </label>
                 </div>
@@ -210,7 +210,7 @@
                         <div class="col-md-9">
                             <div class="input-space">
                                 <select formControlName="state">
-                                    <option *ngFor="let state of billingAddressStates">
+                                    <option *ngFor="let state of billingAddressStates" [ngValue]="state">
                                         {{ state.name }}
                                     </option>
                                 </select>

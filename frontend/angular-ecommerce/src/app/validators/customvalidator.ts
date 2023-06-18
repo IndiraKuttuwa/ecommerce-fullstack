@@ -10,7 +10,7 @@ export class Customvalidator {
         }
     }
     static containsSpaces(control: FormControl) : ValidationErrors {
-        if((control.value as string).indexOf(' ')>=0) {
+        if((control.value!=null) && (control.value as string).indexOf(' ')>=0) {
             return { 'containsSpaces': true };
         }
         else {
