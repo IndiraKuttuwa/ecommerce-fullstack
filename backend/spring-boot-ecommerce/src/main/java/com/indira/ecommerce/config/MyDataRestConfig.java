@@ -1,12 +1,10 @@
 package com.indira.ecommerce.config;
 
-import com.indira.ecommerce.entity.Country;
-import com.indira.ecommerce.entity.Product;
-import com.indira.ecommerce.entity.ProductCategory;
-import com.indira.ecommerce.entity.State;
+import com.indira.ecommerce.entity.*;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.metamodel.EntityType;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.rest.core.config.RepositoryRestConfiguration;
 import org.springframework.data.rest.webmvc.config.RepositoryRestConfigurer;
@@ -19,6 +17,10 @@ import java.util.List;
 
 @Configuration
 public class MyDataRestConfig implements RepositoryRestConfigurer {
+
+
+    @Value("${allowed.origins}")
+    private String[] theAllowedOrigins;
 
     private EntityManager entityManager;
 
@@ -33,16 +35,19 @@ public class MyDataRestConfig implements RepositoryRestConfigurer {
         HttpMethod[] theUnsupportedActions = {
                 HttpMethod.DELETE,
                 HttpMethod.POST,
-                HttpMethod.PUT
+                HttpMethod.PUT,
+                HttpMethod.PATCH
         };
         //Disabling http methods for repositories
         disableHttpMethods(Product.class, config, theUnsupportedActions);
         disableHttpMethods(ProductCategory.class, config, theUnsupportedActions);
         disableHttpMethods(Country.class, config, theUnsupportedActions);
         disableHttpMethods(State.class, config, theUnsupportedActions);
+        disableHttpMethods(Order.class, config, theUnsupportedActions);
         //exposes the ids of the products and ids of product categories in rest API
 
         exposeIds(config);
+        cors.addMapping(config.getBasePath()+"/**").allowedOrigins(theAllowedOrigins);
 
     }
 
